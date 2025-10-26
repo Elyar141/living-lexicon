@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Living Lexicon Flashcards</title>
+<style>
+  /* =====================================================
+     CSS Variables
+     ===================================================== */
+  :root {
+    /* Blob background */
+    --blob-color: 255, 140, 0;
+    --blob-strength: 0.16;
+    --blob-size: 70vmin;
+    --blur: 110px;
+    --speed: 42s;
+
+    /* Colors */
+    --bg: #ffffff;
+    --text: #1c2b3a;
+    --text-light: #6b7280;
+    --border: rgba(28, 43, 58, 0.15);
+
+    /* Typography */
+    --font-xl: clamp(48px, 8vw, 72px);
+    --font-lg: clamp(20px, 3vw, 28px);
+    --font-md: clamp(18px, 2.5vw, 24px);
+    --font-sm: clamp(16px, 2vw, 20px);
+    --font-xs: 14px;
+
+    /* Transitions */
+    --flip-duration: 600ms;
+    --fade-duration: 900ms;
+  }
+
+  /* =====================================================
+     Reset & Base Styles
+     ===================================================== */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    height: 100%;
+    width: 100%;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* =====================================================
+     Blob Background Animation
+     ===================================================== */
+  .field {
+    position: fixed;
+    inset: -22vmax;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .blob {
+    position: absolute;
+    width: var(--blob-size);
+    height: var(--blob-size);
+    border-radius: 50%;
+    background: radial-gradient(
+      circle at 50% 50%,
+      rgba(var(--blob-color), var(--blob-strength)) 0%,
+      rgba(var(--blob-color), calc(var(--blob-strength) * 0.55)) 32%,
+      rgba(var(--blob-color), 0) 70%
+    );
+    filter: blur(var(--blur));
+    animation: drift var(--speed) ease-in-out infinite;
+    transform: translate3d(-18vw, -8vh, 0);
+  }
+
+  @keyframes drift {
+    0%   { transform: translate3d(-18vw, -8vh, 0); }
+    20%  { transform: translate3d(46vw, -14vh, 0); }
+    40%  { transform: translate3d(34vw, 58vh, 0); }
+    60%  { transform: translate3d(-12vw, 44vh, 0); }
+    80%  { transform: translate3d(0vw, -4vh, 0); }
+    100% { transform: translate3d(-18vw, -8vh, 0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .blob {
+      animation: none;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  /* =====================================================
+     Main Container
+     ===================================================== */
+  .container {
+    position: relative;
+    z-index: 1;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    box-sizing: border-box;
+  }
+
+  /* =====================================================
+     Simple Card - No Flip
+     ===================================================== */
+  .card-container {
+    width: 100%;
+    max-width: 800px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .simple-card {
+    background: white;
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    text-align: center;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+
+  #word-display {
+    font-size: var(--font-xl);
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+  }
+
+  #texture-display {
+    font-size: var(--font-md);
+    color: var(--text-light);
+    font-style: italic;
+    margin: 0;
+  }
+
+  #definition-display {
+    font-size: var(--font-lg);
+    color: var(--text);
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 1rem 0;
+  }
+
+  #examples-display {
+    font-size: var(--font-sm);
+    color: var(--text-light);
+    line-height: 1.7;
+    max-width: 650px;
+    text-align: left;
+  }
+
+  .example {
+    margin-bottom: 1rem;
+    padding-left: 1rem;
+    border-left: 3px solid rgba(255, 140, 0, 0.3);
+  }
+
+  /* =====================================================
+     Typography - Front of Card
+     ===================================================== */
+  .word-main {
+    font-size: var(--font-xl);
+    font-weight: 800;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: #000000;
+    z-index: 10;
+    position: relative;
+  }
+
+  .texture {
+    font-size: var(--font-md);
+    font-weight: 400;
+    color: var(--text-light);
+    margin-bottom: 3rem;
+    line-height: 1.5;
+  }
+
+  /* =====================================================
+     Typography - Back of Card
+     ===================================================== */
+  .word-small {
+    font-size: var(--font-lg);
+    font-weight: 700;
+    margin-bottom: 2rem;
+    letter-spacing: -0.01em;
+  }
+
+  .definition {
+    font-size: var(--font-lg);
+    font-weight: 400;
+    line-height: 1.6;
+    margin-bottom: 2.5rem;
+    max-width: 600px;
+  }
+
+  .examples {
+    font-size: var(--font-sm);
+    font-weight: 300;
+    line-height: 1.7;
+    color: var(--text-light);
+    max-width: 650px;
+    margin-bottom: 2.5rem;
+  }
+
+  .example {
+    margin-bottom: 1.5rem;
+    text-align: left;
+  }
+
+  .example:last-child {
+    margin-bottom: 0;
+  }
+
+  /* =====================================================
+     Buttons
+     ===================================================== */
+  .btn {
+    background: #ffffff;
+    border: 3px solid #000000;
+    color: #000000;
+    padding: 0.875rem 2rem;
+    font-size: var(--font-sm);
+    font-weight: 500;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 300ms ease;
+    font-family: inherit;
+    margin: 0.5rem;
+    z-index: 10;
+    position: relative;
+  }
+
+  .btn:hover {
+    border-color: var(--text);
+    transform: translateY(-2px);
+  }
+
+  .btn:active {
+    transform: translateY(0);
+  }
+
+  .btn-primary {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+
+  .btn-primary:hover {
+    background: #2d3e52;
+    border-color: #2d3e52;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* =====================================================
+     Navigation Arrows
+     ===================================================== */
+  .nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 2px solid var(--border);
+    color: var(--text);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    opacity: 0;
+    transition: all 300ms ease;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .nav-left {
+    left: 2rem;
+  }
+
+  .nav-right {
+    right: 2rem;
+  }
+
+  .container:hover .nav-arrow {
+    opacity: 0.6;
+    pointer-events: auto;
+  }
+
+  .nav-arrow:hover {
+    opacity: 1;
+    border-color: var(--text);
+    transform: translateY(-50%) scale(1.1);
+  }
+
+  /* =====================================================
+     Progress Indicator
+     ===================================================== */
+  .progress {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: var(--font-xs);
+    color: var(--text-light);
+    font-weight: 500;
+    z-index: 10;
+  }
+
+  /* =====================================================
+     Loading & Error States
+     ===================================================== */
+  .message {
+    text-align: center;
+    padding: 3rem 2rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .message h2 {
+    font-size: var(--font-lg);
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  .message p {
+    font-size: var(--font-sm);
+    color: var(--text-light);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--text);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 2rem auto;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .setup-code {
+    background: #f3f4f6;
+    padding: 1rem;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    text-align: left;
+    margin: 1rem 0;
+    overflow-x: auto;
+  }
+
+  /* =====================================================
+     Responsive - Mobile
+     ===================================================== */
+  @media (max-width: 768px) {
+    .container {
+      padding: 1rem;
+    }
+
+    .card-face {
+      padding: 2rem 1.5rem;
+    }
+
+    .nav-arrow {
+      display: none;
+    }
+
+    .progress {
+      bottom: 1rem;
+      font-size: 12px;
+    }
+
+    .button-group {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .btn {
+      width: 100%;
+      max-width: 300px;
+    }
+  }
+
+  /* =====================================================
+     Accessibility
+     ===================================================== */
+  .btn:focus,
+  .nav-arrow:focus {
+    outline: 2px solid var(--text);
+    outline-offset: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card-inner,
+    .btn,
+    .nav-arrow,
+    .card {
+      transition: none;
+    }
+  }
+
+  /* Hide elements by default until loaded */
+  .hidden {
+    display: none;
+  }
+</style>
+</head>
+<body>
+  <!-- Blob Background -->
+  <div class="field" aria-hidden="true">
+    <div class="blob"></div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="container">
+    <!-- Loading State -->
+    <div id="loading" class="message">
+      <div class="loading-spinner"></div>
+      <h2>Loading your vocabulary...</h2>
+    </div>
+
+    <!-- Setup Message -->
+    <div id="setup-message" class="message hidden">
+      <h2>Setup Required</h2>
+      <p>Please add your Notion Integration Token to the .env file.</p>
+      <p><strong>Steps:</strong></p>
+      <ol style="text-align: left; margin: 1rem auto; max-width: 500px; line-height: 1.8;">
+        <li>Go to <a href="https://www.notion.so/my-integrations" target="_blank">notion.so/my-integrations</a></li>
+        <li>Create a new integration or use an existing one</li>
+        <li>Copy your integration token</li>
+        <li>Share your Living Lexicon database with the integration</li>
+        <li>Create a <code>.env</code> file (copy from <code>.env.example</code>)</li>
+        <li>Paste your token in the .env file: <code>NOTION_API_KEY=your_token_here</code></li>
+        <li>Restart the server and reload this page</li>
+      </ol>
+    </div>
+
+    <!-- Server Not Running Message -->
+    <div id="server-message" class="message hidden">
+      <h2>Server Not Running</h2>
+      <p>This app needs to be run through the local server.</p>
+      <p><strong>To start the server:</strong></p>
+      <ol style="text-align: left; margin: 1rem auto; max-width: 400px; line-height: 1.8;">
+        <li>Open terminal in the app directory</li>
+        <li>Run: <code style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px;">npm install</code></li>
+        <li>Run: <code style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px;">npm start</code></li>
+        <li>Open <a href="http://localhost:3000">http://localhost:3000</a> in your browser</li>
+      </ol>
+      <p style="margin-top: 1rem; font-size: 14px; color: #6b7280;">See README.md for detailed instructions.</p>
+    </div>
+
+    <!-- Error Message -->
+    <div id="error-message" class="message hidden">
+      <h2>Oops! Something went wrong</h2>
+      <p id="error-text"></p>
+      <button class="btn" onclick="location.reload()">Try Again</button>
+    </div>
+
+    <!-- No Words Message -->
+    <div id="no-words-message" class="message hidden">
+      <h2>No Words Found</h2>
+      <p>Make sure you have words with Status = "Enriched" in your Notion database.</p>
+      <button class="btn" onclick="location.reload()">Refresh</button>
+    </div>
+
+    <!-- All Mastered Message -->
+    <div id="all-mastered-message" class="message hidden">
+      <h2>🎉 Congratulations!</h2>
+      <p>You've mastered all available words!</p>
+      <button class="btn btn-primary" onclick="resetProgress()">Reset Progress</button>
+    </div>
+
+    <!-- Flashcard - SIMPLIFIED -->
+    <div id="flashcard-container" class="card-container hidden">
+      <div class="simple-card">
+        <h1 id="word-display">Word</h1>
+        <p id="texture-display">Texture</p>
+        <p id="definition-display">Definition</p>
+        <div id="examples-display"></div>
+
+        <div class="button-group">
+          <button class="btn btn-primary" onclick="markAsMastered()">Got It!</button>
+          <button class="btn" onclick="nextWord()">Next Word</button>
+        </div>
+      </div>
+
+      <!-- Navigation Arrows -->
+      <button class="nav-arrow nav-left" onclick="previousWord()" aria-label="Previous word">←</button>
+      <button class="nav-arrow nav-right" onclick="nextWord()" aria-label="Next word">→</button>
+    </div>
+  </div>
+
+  <!-- Progress Counter -->
+  <div id="progress" class="progress hidden"></div>
+
+  <script>
+    /* =====================================================
+       STATE MANAGEMENT
+       ===================================================== */
+    let allWords = [];
+    let activeWords = [];
+    let currentIndex = 0;
+
+    /* =====================================================
+       DOM ELEMENTS
+       ===================================================== */
+    const elements = {
+      loading: document.getElementById('loading'),
+      setupMessage: document.getElementById('setup-message'),
+      serverMessage: document.getElementById('server-message'),
+      errorMessage: document.getElementById('error-message'),
+      errorText: document.getElementById('error-text'),
+      noWordsMessage: document.getElementById('no-words-message'),
+      allMasteredMessage: document.getElementById('all-mastered-message'),
+      flashcardContainer: document.getElementById('flashcard-container'),
+      progress: document.getElementById('progress'),
+      wordDisplay: document.getElementById('word-display'),
+      textureDisplay: document.getElementById('texture-display'),
+      definitionDisplay: document.getElementById('definition-display'),
+      examplesDisplay: document.getElementById('examples-display')
+    };
+
+    /* =====================================================
+       API INTEGRATION - Uses server proxy to avoid CORS
+       ===================================================== */
+    async function fetchVocabulary() {
+      try {
+        console.log('🔄 Fetching vocabulary from server...');
+
+        const response = await fetch('/api/vocabulary', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        console.log('📡 Server response status:', response.status);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('❌ Server error:', errorData);
+
+          if (errorData.setup) {
+            throw new Error("SETUP_REQUIRED");
+          }
+
+          if (response.status === 401) {
+            throw new Error("INVALID_TOKEN");
+          }
+
+          throw new Error(errorData.error || "Failed to fetch vocabulary");
+        }
+
+        const data = await response.json();
+        console.log('✅ Received data:', data.results ? `${data.results.length} words` : 'No results');
+        return data;
+      } catch (error) {
+        console.error('❌ Fetch error:', error);
+        // If fetch fails, might be opened as file:// instead of http://
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          throw new Error("SERVER_REQUIRED");
+        }
+        throw error;
+      }
+    }
+
+    /* =====================================================
+       DATA PARSING
+       ===================================================== */
+    function parseNotionData(data) {
+      console.log('🔍 Parsing Notion data...');
+      const words = [];
+
+      if (!data.results || data.results.length === 0) {
+        console.warn('⚠️  No results to parse');
+        return words;
+      }
+
+      console.log(`📝 Processing ${data.results.length} entries...`);
+
+      for (const page of data.results) {
+        try {
+          const props = page.properties;
+
+          // Extract word
+          const word = props.Name?.title?.[0]?.text?.content || "";
+          if (!word) {
+            console.warn('⚠️  Entry missing word name, skipping');
+            continue;
+          }
+
+          // Extract other fields
+          const definition = props["Brief Definition"]?.rich_text?.[0]?.text?.content || "";
+          const texture = props["Emotional Texture"]?.rich_text?.[0]?.text?.content || "";
+          const examplesText = props["Contextual Examples"]?.rich_text?.[0]?.text?.content || "";
+
+          // Parse examples (split by double newline)
+          const examples = examplesText
+            .split(/\n\n+/)
+            .map(ex => ex.trim())
+            .filter(ex => ex.length > 0);
+
+          // Only include if we have at least the word and definition
+          if (word && definition) {
+            words.push({
+              id: page.id,
+              word,
+              definition,
+              texture,
+              examples: examples.length > 0 ? examples : ["No examples available."]
+            });
+            console.log(`✓ Parsed: ${word}`);
+          } else {
+            console.warn(`⚠️  Skipping "${word}" - missing definition`);
+          }
+        } catch (err) {
+          console.warn("❌ Error parsing entry:", err);
+        }
+      }
+
+      console.log(`✅ Successfully parsed ${words.length} words`);
+      return words;
+    }
+
+    /* =====================================================
+       LOCAL STORAGE - PROGRESS TRACKING
+       ===================================================== */
+    function getMasteredWords() {
+      try {
+        return JSON.parse(localStorage.getItem('livingLexicon_mastered') || '[]');
+      } catch {
+        return [];
+      }
+    }
+
+    function saveMasteredWord(wordId) {
+      const mastered = getMasteredWords();
+      if (!mastered.includes(wordId)) {
+        mastered.push(wordId);
+        localStorage.setItem('livingLexicon_mastered', JSON.stringify(mastered));
+      }
+    }
+
+    function resetProgress() {
+      localStorage.removeItem('livingLexicon_mastered');
+      location.reload();
+    }
+
+    function getActiveWords(words) {
+      const mastered = getMasteredWords();
+      return words.filter(word => !mastered.includes(word.id));
+    }
+
+    /* =====================================================
+       CARD RENDERING - SIMPLIFIED
+       ===================================================== */
+    function renderCard(word) {
+      console.log(`🎨 Rendering card for: ${word.word}`);
+
+      // Make sure content elements are visible
+      elements.wordDisplay.classList.remove('hidden');
+      elements.textureDisplay.classList.remove('hidden');
+      elements.definitionDisplay.classList.remove('hidden');
+      elements.examplesDisplay.classList.remove('hidden');
+
+      // Display word
+      elements.wordDisplay.textContent = word.word;
+
+      // Display texture
+      elements.textureDisplay.textContent = word.texture || "";
+
+      // Display definition
+      elements.definitionDisplay.textContent = word.definition;
+
+      // Render examples
+      elements.examplesDisplay.innerHTML = word.examples
+        .map(ex => `<div class="example">${ex}</div>`)
+        .join('');
+
+      // Update progress
+      const totalWords = allWords.length;
+      const masteredCount = getMasteredWords().length;
+      elements.progress.textContent = `${masteredCount}/${totalWords}`;
+
+      console.log(`✅ Card rendered: ${word.word}`);
+      console.log(`   Word element text: ${elements.wordDisplay.textContent}`);
+      console.log(`   Word element has hidden class: ${elements.wordDisplay.classList.contains('hidden')}`);
+    }
+
+    function loadCard(index) {
+      console.log(`📥 loadCard called with index: ${index}`);
+
+      if (activeWords.length === 0) {
+        console.warn('⚠️  No active words to load');
+        return;
+      }
+
+      // Ensure index is within bounds
+      currentIndex = ((index % activeWords.length) + activeWords.length) % activeWords.length;
+      console.log(`📍 Loading word: ${activeWords[currentIndex].word}`);
+
+      // Render the word
+      renderCard(activeWords[currentIndex]);
+    }
+
+    /* =====================================================
+       NAVIGATION
+       ===================================================== */
+    function nextWord() {
+      loadCard(currentIndex + 1);
+    }
+
+    function previousWord() {
+      loadCard(currentIndex - 1);
+    }
+
+    function markAsMastered() {
+      const currentWord = activeWords[currentIndex];
+      saveMasteredWord(currentWord.id);
+
+      // Remove from active words
+      activeWords = getActiveWords(allWords);
+
+      // Update progress
+      const totalWords = allWords.length;
+      const masteredCount = getMasteredWords().length;
+      elements.progress.textContent = `${masteredCount}/${totalWords}`;
+
+      // Check if all words are mastered
+      if (activeWords.length === 0) {
+        showScreen('all-mastered-message');
+        return;
+      }
+
+      // Load next word (or same index if it was the last word)
+      if (currentIndex >= activeWords.length) {
+        currentIndex = 0;
+      }
+      loadCard(currentIndex);
+    }
+
+    /* =====================================================
+       KEYBOARD & TOUCH HANDLERS
+       ===================================================== */
+    document.addEventListener('keydown', (e) => {
+      // Ignore if typing in input fields
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        previousWord();
+      } else if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        nextWord();
+      }
+    });
+
+    // Touch/Swipe Support (Mobile)
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    elements.flashcardContainer.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    elements.flashcardContainer.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    }, { passive: true });
+
+    function handleSwipe() {
+      const swipeThreshold = 50;
+      const diff = touchEndX - touchStartX;
+
+      if (Math.abs(diff) > swipeThreshold) {
+        if (diff < 0) {
+          nextWord(); // Swipe left
+        } else {
+          previousWord(); // Swipe right
+        }
+      }
+    }
+
+    // Mobile swipe support enabled above
+
+    /* =====================================================
+       UI HELPERS
+       ===================================================== */
+    function showScreen(screenId) {
+      console.log(`🖥️  showScreen called for: ${screenId}`);
+
+      // List of screen IDs to show/hide (NOT content elements)
+      const screens = [
+        'loading',
+        'setup-message',
+        'server-message',
+        'error-message',
+        'no-words-message',
+        'all-mastered-message',
+        'flashcard-container'
+      ];
+
+      // Hide all screens
+      screens.forEach(id => {
+        const screen = document.getElementById(id);
+        if (screen) {
+          screen.classList.add('hidden');
+        }
+      });
+
+      // Show selected screen
+      const screen = document.getElementById(screenId);
+      if (screen) {
+        screen.classList.remove('hidden');
+        console.log(`✅ Screen "${screenId}" is now visible`);
+      } else {
+        console.error(`❌ Screen "${screenId}" not found!`);
+      }
+    }
+
+    function showError(message) {
+      elements.errorText.textContent = message;
+      showScreen('error-message');
+    }
+
+    /* =====================================================
+       INITIALIZATION
+       ===================================================== */
+    async function init() {
+      try {
+        // Show loading
+        showScreen('loading');
+        console.log('🎬 Initializing app...');
+
+        // Fetch vocabulary data from server proxy
+        const data = await fetchVocabulary();
+
+        // Parse data
+        allWords = parseNotionData(data);
+        console.log(`📚 Total words loaded: ${allWords.length}`);
+
+        if (allWords.length === 0) {
+          console.log('⚠️  No words found, showing no-words message');
+          showScreen('no-words-message');
+          return;
+        }
+
+        // Filter out mastered words
+        activeWords = getActiveWords(allWords);
+        console.log(`🎯 Active words (not mastered): ${activeWords.length}`);
+
+        if (activeWords.length === 0) {
+          console.log('🎉 All words mastered!');
+          showScreen('all-mastered-message');
+          return;
+        }
+
+        // Show flashcard
+        console.log('🃏 Showing flashcard container...');
+        showScreen('flashcard-container');
+        elements.progress.classList.remove('hidden');
+
+        // Load first card
+        console.log('📖 Loading first card...');
+        loadCard(0);
+
+        console.log('✅ App initialization complete!');
+
+      } catch (error) {
+        console.error('Initialization error:', error);
+
+        if (error.message === "SERVER_REQUIRED") {
+          showScreen('server-message');
+        } else if (error.message === "SETUP_REQUIRED") {
+          showScreen('setup-message');
+        } else if (error.message === "INVALID_TOKEN") {
+          showError("Invalid Notion API token. Please check your integration token in the .env file and make sure you've shared the database with your integration.");
+        } else {
+          showError(error.message || "Failed to load vocabulary. Please check your connection and try again.");
+        }
+      }
+    }
+
+    // Start the app when page loads
+    window.addEventListener('load', init);
+  </script>
+</body>
+</html>

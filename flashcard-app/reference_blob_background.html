@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Premium Travel Loader — Bold Line Only</title>
+<style>
+  :root{
+    --blob-color: 255,140,0;     /* orange RGB */
+    --blob-strength: 0.16;
+    --blob-size: 70vmin;
+    --blur: 110px;
+    --speed: 42s;
+    --bg: #ffffff;
+    --text: #1c2b3a;
+    --fade: 900ms;               /* text crossfade */
+    --interval: 3500ms;          /* each line stays visible */
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background: var(--bg);
+    display:grid;
+    place-items:center;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial, sans-serif;
+    color:var(--text);
+    overflow:hidden;
+  }
+
+  /* Background motion */
+  .field{
+    position:fixed;
+    inset:-22vmax;
+    z-index:0;
+    pointer-events:none;
+  }
+  .blob{
+    position:absolute;
+    width:var(--blob-size);
+    height:var(--blob-size);
+    border-radius:50%;
+    background:
+      radial-gradient(circle at 50% 50%,
+        rgba(var(--blob-color), var(--blob-strength)) 0%,
+        rgba(var(--blob-color), calc(var(--blob-strength)*0.55)) 32%,
+        rgba(var(--blob-color), 0) 70%);
+    filter: blur(var(--blur));
+    animation: drift var(--speed) ease-in-out infinite;
+    transform: translate3d(-18vw, -8vh, 0);
+  }
+  @keyframes drift{
+    0%   { transform: translate3d(-18vw, -8vh, 0); }
+    20%  { transform: translate3d(46vw, -14vh, 0); }
+    40%  { transform: translate3d(34vw, 58vh, 0); }
+    60%  { transform: translate3d(-12vw, 44vh, 0); }
+    80%  { transform: translate3d(0vw, -4vh, 0); }
+    100% { transform: translate3d(-18vw, -8vh, 0); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .blob{ animation:none; transform: translate3d(0,0,0) }
+  }
+
+  /* Bold changing line only */
+  .copy{
+    position:relative;
+    z-index:1;
+    width:min(960px, 90vw);
+    text-align:center;
+  }
+  .line{
+    margin:0 auto;
+    font-weight:800; /* bold style like your screenshot */
+    letter-spacing:.2px;
+    font-size:clamp(28px, 6vw, 48px);
+    line-height:1.2;
+    opacity:0;
+    transition: opacity var(--fade) ease;
+  }
+  .line.show{ opacity:1; }
+</style>
+</head>
+<body>
+  <div class="field" aria-hidden="true">
+    <div class="blob"></div>
+  </div>
+
+  <section class="copy" aria-live="polite" aria-atomic="true">
+    <h1 id="line" class="line"></h1>
+  </section>
+
+<script>
+  // Bold single-line copy variants
+  const messages = [
+    "Designing your escape…",
+    "Charting a quiet route to somewhere sunny.",
+    "Warming up your wanderlust.",
+    "Curating stays where mornings feel longer.",
+    "Collecting little luxuries, one view at a time.",
+    "Your window seat to the world is almost ready.",
+    "A breeze crosses oceans—bringing your plans closer.",
+    "Every journey begins with a single click."
+  ];
+
+  const line = document.getElementById("line");
+  const fadeMs = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--fade")) || 900;
+  const intervalMs = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--interval")) || 3500;
+
+  let i = -1;
+  function showNext(){
+    i = (i + 1) % messages.length;
+    line.classList.remove("show");
+    setTimeout(() => {
+      line.textContent = messages[i];
+      line.classList.add("show");
+    }, fadeMs * 0.65);
+  }
+
+  showNext();
+  setInterval(showNext, intervalMs);
+</script>
+</body>
+</html>
