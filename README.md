@@ -30,6 +30,36 @@ Perfect for:
 
 ---
 
+## 📱 Flashcard App
+
+**NEW!** Practice your enriched vocabulary with an interactive flashcard web app.
+
+👉 **[Go to Flashcard App →](./flashcard-app/)**
+
+### Features:
+- 🎴 Clean, minimal carousel interface
+- 📖 Shows word, texture, definition, and examples all at once
+- ✅ "Got It!" button to mark words as mastered
+- 📊 Progress tracking with localStorage
+- ⌨️ Keyboard navigation (arrow keys)
+- 📱 Mobile-friendly with swipe gestures
+- 🎨 Beautiful animated blob background
+
+### Quick Start:
+```bash
+cd flashcard-app
+npm install
+cp .env.example .env
+# Add your Notion API key to .env
+npm start
+```
+
+Then open http://localhost:3000 in your browser!
+
+See [flashcard-app/README.md](./flashcard-app/README.md) for full setup instructions.
+
+---
+
 ## Demo
 
 [Screenshot or GIF of the enrichment process will go here]
@@ -153,7 +183,7 @@ Examples are tailored to YOUR interests and learning context!
 **Run daily or weekly:**
 - Add words throughout the day via browser extension or iOS shortcut
 - Run the script once to enrich them all at once
-- Practice with your flashcard app
+- Practice with the [flashcard app](./flashcard-app/)
 
 **Batch processing:**
 - The script processes all "Ready" words in one run
@@ -199,8 +229,8 @@ Very affordable for personal use!
 
 After enrichment:
 1. Check your Notion database - words should have full definitions and examples
-2. Build the flashcard practice app
-3. Start learning!
+2. Run the flashcard app to start practicing (see [Flashcard App](#-flashcard-app) section above)
+3. Start learning with your personalized vocabulary!
 
 ## 📝 Notes
 
