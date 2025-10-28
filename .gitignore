@@ -30,6 +30,7 @@ wheels/
 # IDE
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 *~
@@ -44,3 +45,6 @@ Thumbs.db
 # Personal data
 # DO NOT commit API keys!
 # Set them as environment variables instead
+
+# Temporary files
+New Text Document.txt
