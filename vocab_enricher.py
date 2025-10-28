@@ -11,6 +11,10 @@ import time
 from typing import List, Dict, Optional
 import requests
 import json
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configuration
 NOTION_API_KEY = os.getenv("NOTION_API_KEY", "")
